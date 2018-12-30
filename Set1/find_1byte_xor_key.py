@@ -18,10 +18,10 @@ def is_ascii(s):
     return all(ord(c) >= 0x20 and ord(c) <= 0x7F for c in s)
     
 
-def decrypt_1byte_xor(xored_text, enable_print=False):
+def decrypt_1byte_xor(xored_text):
     init_frequencies() # this might take a few seconds...
     
-    best_freq_index = -1 # this holds the number iteration with biggest frequency
+    best_freq_index = (0, 0.0) # this holds the number iteration with biggest frequency
     total_freq = 0.0
     current_decrypted = ""
     
@@ -39,9 +39,9 @@ def decrypt_1byte_xor(xored_text, enable_print=False):
             
         if current_freq > total_freq:
             total_freq = current_freq
-            best_freq_index = i
+            best_freq_index = (i,total_freq)
             
-            
+    # The return value is a tuple of the index which the best match was at, and how trusty its frequency was
     return best_freq_index
     
     
