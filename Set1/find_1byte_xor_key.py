@@ -1,34 +1,48 @@
+import requests
+import math
+from collections import Counter
+SITE_TO_GET_FREQUENCY = "http://ocw.mit.edu/ans7870/6/6.006/s08/lecturenotes/files/t8.shakespeare.txt"
 
-import string
-import collections
 
-# Returns empty string if something failed.
+MAX_ASCII_CHARS = 127
 
-# Change logic to first do most common check and only then check if one out of the three most common is space.
+FREQUENCY_TABLE = []
 
-def decrypt_1byte_new(xored_text): # Still a WIP, fix to find the string in next challenge
-    s = ""
-    byte_count = collections.Counter(xored_text)
-    common = byte_count.most_common(3)
+def init_frequencies():
+    global FREQUENCY_TABLE
+    site_text = requests.get(SITE_TO_GET_FREQUENCY).text.encode('ascii')
+    FREQUENCY_TABLE = dict(Counter(site_text))
     
-    for i in xrange(len(common)):
-        diff = (ord(common[i][0]) ^ ord(' '))
-        s = "".join([chr(ord(x)^diff) for x in xored_text])
-        if chr(ord(common[0][0])^diff) == ' ' and (chr(ord(common[1][0])^diff).lower() in 'aeiou' or chr(ord(common[2][0])^diff).lower() in 'aeiou'):
-            return s
-    
-    return ""
-            
 
-def decrypt_1byte_old(xored_text):
-    for item in xrange(1, 256):
-        s = ""
-        for index in xrange(len(xored_text)):
-            s += chr(ord(xored_text[index])^item)
+def is_ascii(s):
+    return all(ord(c) >= 0x20 and ord(c) <= 0x7F for c in s)
+    
+
+def decrypt_1byte_xor(xored_text, enable_print=False):
+    init_frequencies() # this might take a few seconds...
+    
+    best_freq_index = -1 # this holds the number iteration with biggest frequency
+    total_freq = 0.0
+    current_decrypted = ""
+    
+    for i in xrange(0, MAX_ASCII_CHARS + 1):
+        current_decrypted = ""
+        current_freq = 1.0
         
-        if all(c in string.printable for c in s) == True: # if string is only printables.
-            byte_count = collections.Counter(s)
-            common = byte_count.most_common(3)
-            if common[0][0] == ' ' and (common[1][0] in 'aeiou' or common[2][0] in 'aeiou'):
-                return s
-    return ""
+        
+        for j in xrange(len(xored_text)):
+            current_decrypted += chr(ord(xored_text[j]) ^ i)
+            try:
+                current_freq *= math.log(FREQUENCY_TABLE[current_decrypted[j]])
+            except:
+                break
+            
+        if current_freq > total_freq:
+            total_freq = current_freq
+            best_freq_index = i
+            
+            
+    return best_freq_index
+    
+    
+    
