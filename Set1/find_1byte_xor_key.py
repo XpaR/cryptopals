@@ -8,19 +8,23 @@ MAX_ASCII_CHARS = 127
 
 FREQUENCY_TABLE = []
 
+first_time = True
+
+
+# You should call this function once, before running decrypt_1byte_xor
 def init_frequencies():
     global FREQUENCY_TABLE
     site_text = requests.get(SITE_TO_GET_FREQUENCY).text.encode('ascii')
     FREQUENCY_TABLE = dict(Counter(site_text))
-    
+
+
 
 def is_ascii(s):
     return all(ord(c) >= 0x20 and ord(c) <= 0x7F for c in s)
     
 
-def decrypt_1byte_xor(xored_text):
-    init_frequencies() # this might take a few seconds...
     
+def decrypt_1byte_xor(xored_text):
     best_freq_index = (0, 0.0) # this holds the number iteration with biggest frequency
     total_freq = 0.0
     current_decrypted = ""
@@ -33,9 +37,9 @@ def decrypt_1byte_xor(xored_text):
         for j in xrange(len(xored_text)):
             current_decrypted += chr(ord(xored_text[j]) ^ i)
             try:
-                current_freq *= math.log(FREQUENCY_TABLE[current_decrypted[j]])
+                current_freq += math.log(FREQUENCY_TABLE[current_decrypted[j]])
             except:
-                break
+                continue
             
         if current_freq > total_freq:
             total_freq = current_freq
@@ -43,6 +47,7 @@ def decrypt_1byte_xor(xored_text):
             
     # The return value is a tuple of the index which the best match was at, and how trusty its frequency was
     return best_freq_index
+    
     
     
     
